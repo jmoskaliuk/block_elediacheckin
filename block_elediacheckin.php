@@ -65,15 +65,30 @@ class block_elediacheckin extends block_base {
     }
 
     /**
-     * Declares on which pages this block can appear. Only course pages
-     * make sense for a launcher that targets a course-scoped activity.
+     * Declares on which pages this block can appear.
+     *
+     * Course pages are the primary use case (the block launches a
+     * course-scoped Check-in activity). The frontpage is also allowed
+     * because Moodle treats the frontpage as a regular course (SITEID)
+     * — admins can therefore place a Check-in activity on the frontpage
+     * and add this block to launch it site-wide. The per-instance edit
+     * form uses `get_fast_modinfo($COURSE)`, which resolves to the
+     * frontpage course on site-index, so the dropdown correctly offers
+     * frontpage-scoped Check-in activities when configuring the block
+     * there. Dashboard/admin/other mod pages stay off to avoid noise.
+     *
+     * Both `site` and `site-index` are set to true: Moodle core uses
+     * `site-index` as the canonical page-type pattern for the frontpage,
+     * while `site` is accepted as a shorthand in a handful of core
+     * blocks. Setting both makes the intent explicit in both idioms.
      *
      * @return array
      */
     public function applicable_formats(): array {
         return [
             'course-view' => true,
-            'site'        => false,
+            'site'        => true,
+            'site-index'  => true,
             'my'          => false,
             'mod'         => false,
             'admin'       => false,
