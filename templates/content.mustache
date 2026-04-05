@@ -1,0 +1,36 @@
+{{!
+    @template block_elediacheckin/content
+
+    Mini question-generator body for block_elediacheckin.
+
+    Example context (json):
+    {
+        "instanceid": 7,
+        "hasquestion": true,
+        "question": { "text": "Was nimmst du aus dieser Sitzung mit?", "type": "checkout" },
+        "strnew": "Andere Frage",
+        "strnone": "Keine Fragen",
+        "fullviewurl": "/mod/elediacheckin/view.php?id=42",
+        "strfullview": "Vollansicht öffnen",
+        "showfullviewlink": true
+    }
+}}
+<div class="block-elediacheckin" data-instance="{{instanceid}}">
+    {{#hasquestion}}
+        <p class="small text-muted text-uppercase mb-1">{{question.type}}</p>
+        <p class="mb-3" style="font-weight:600; line-height:1.4;">{{question.text}}</p>
+    {{/hasquestion}}
+    {{^hasquestion}}
+        <div class="alert alert-info py-2 mb-2" role="status">{{strnone}}</div>
+    {{/hasquestion}}
+    <div class="d-flex gap-2 flex-wrap">
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.location.reload();">
+            {{strnew}}
+        </button>
+        {{#showfullviewlink}}
+            {{#fullviewurl}}
+                <a href="{{.}}" class="btn btn-sm btn-link">{{strfullview}}</a>
+            {{/fullviewurl}}
+        {{/showfullviewlink}}
+    </div>
+</div>
