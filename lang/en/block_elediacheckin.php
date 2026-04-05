@@ -30,7 +30,9 @@ $string['elediacheckin:myaddinstance'] = 'Add a Check-in block to the Dashboard'
 
 $string['blocktitle']          = 'Block title';
 $string['linkedactivity']      = 'Linked Check-in activity';
-$string['linkedactivity_help'] = 'Pick the Check-in activity in this course that the block should launch. Only activities the current user can see are listed. Add the activity to the course first if the list is empty.';
+$string['linkedactivity_help'] = 'Pick the Check-in activity the block should launch. Only activities in the current course are listed (on the front page: only activities that live on the front page itself). Add an activity first if the list is empty — you can run several Check-in activities side-by-side (e.g. one for team reflection, one for leadership) and link each block to a different one.';
+$string['noactivityinthiscourse'] = 'There is no Check-in activity in this course yet for the block to launch.';
+$string['createactivitynow']      = 'Create a Check-in activity now';
 $string['showpreview']         = 'Show question preview';
 $string['showpreview_help']    = 'If enabled, the block renders a random question from the linked activity above the launch buttons. The preview respects the activity\'s ziele, categories and content-language settings.';
 
