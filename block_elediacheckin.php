@@ -31,7 +31,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use mod_elediacheckin\local\service\question_provider;
+use mod_elediacheckin\local\service\activity_pool;
 
 /**
  * Compact check-in block - launches a mod_elediacheckin activity in the
@@ -127,15 +127,27 @@ class block_elediacheckin extends block_base {
 
         $instance = $this->fetch_instance_row($cm->instance);
 
-        $viewurl = new moodle_url('/mod/elediacheckin/view.php', ['id' => $cm->id]);
-        $popupurl = new moodle_url('/mod/elediacheckin/present.php',
-            ['id' => $cm->id, 'layout' => 'popup']);
-
         // Optional preview question — rendered above the launch buttons.
+        // Resolved BEFORE the launch URLs so we can pin the currently-
+        // displayed card into the URL params (?q=<externalid>&activeziel=
+        // <ziel>). That way, clicking "Open Check-in" or "Open as popup"
+        // opens the same card the user was just looking at, instead of
+        // rolling a fresh random one on the target page.
         $preview = null;
         if (!empty($config->showpreview) && $instance !== null) {
             $preview = $this->resolve_preview_question($instance, $COURSE);
         }
+
+        $viewparams  = ['id' => $cm->id];
+        $popupparams = ['id' => $cm->id, 'layout' => 'popup'];
+        if ($preview !== null && !empty($preview['externalid'])) {
+            $viewparams['q']           = $preview['externalid'];
+            $viewparams['activeziel']  = $preview['ziel'];
+            $popupparams['q']          = $preview['externalid'];
+            $popupparams['activeziel'] = $preview['ziel'];
+        }
+        $viewurl  = new moodle_url('/mod/elediacheckin/view.php', $viewparams);
+        $popupurl = new moodle_url('/mod/elediacheckin/present.php', $popupparams);
 
         $templatecontext = [
             'instanceid'     => $this->instance->id,
@@ -173,9 +185,13 @@ class block_elediacheckin extends block_base {
 
     /**
      * Resolve a random preview question honouring the activity's ziele,
-     * categories, and content-language settings. Mirrors the sentinel
-     * handling used by mod_elediacheckin/view.php so the block preview
-     * stays consistent with the activity page.
+     * categories, content-language AND the teacher's per-activity own
+     * questions. Delegates to activity_pool so the block preview sees
+     * exactly the same pool the activity view would — own questions
+     * included.
+     *
+     * The first configured ziel is used for the preview. Language
+     * resolution mirrors view.php: configured → current user → any.
      *
      * @param \stdClass $instance The elediacheckin DB row.
      * @param \stdClass $course   The current course record.
@@ -187,6 +203,7 @@ class block_elediacheckin extends block_base {
         if (empty($ziele)) {
             $ziele = ['checkin'];
         }
+        $activeziel = $ziele[0];
 
         $langcandidates = [];
         $configured = (string) ($instance->contentlang ?? '');
@@ -198,32 +215,28 @@ class block_elediacheckin extends block_base {
             $langcandidates[] = $configured;
         }
         $langcandidates[] = current_language();
-        $langcandidates[] = null;
 
-        $provider = new question_provider();
-        $question = null;
-        foreach (array_unique(array_filter($langcandidates, static fn($v) => $v !== ''), SORT_REGULAR) as $lang) {
-            $question = $provider->get_random_question([
-                'ziele'      => $ziele,
-                'categories' => $instance->categories ?? '',
-                'lang'       => $lang,
-            ]);
-            if ($question) {
-                break;
-            }
-        }
-
+        $question = activity_pool::pick_random($instance, $activeziel, $langcandidates);
         if (!$question) {
             return null;
         }
 
-        $zielkey = 'ziel_' . $question->ziel;
+        // Own questions: teacher-authored plain text, escape aggressively.
+        // Bundle questions: trusted JSON content, allow simple HTML.
+        $rendered = !empty($question->isown)
+            ? format_text($question->frage, FORMAT_PLAIN)
+            : format_text($question->frage, FORMAT_HTML);
+
+        $zielforlabel = !empty($question->ziel) ? $question->ziel : $activeziel;
+        $zielkey = 'ziel_' . $zielforlabel;
+
         return [
-            'frage'     => format_text($question->frage, FORMAT_HTML),
-            'ziel'      => $question->ziel,
-            'ziellabel' => get_string_manager()->string_exists($zielkey, 'elediacheckin')
+            'frage'      => $rendered,
+            'ziel'       => $activeziel,
+            'externalid' => (string) ($question->externalid ?? ''),
+            'ziellabel'  => get_string_manager()->string_exists($zielkey, 'elediacheckin')
                 ? get_string($zielkey, 'elediacheckin')
-                : ucfirst($question->ziel),
+                : ucfirst($zielforlabel),
         ];
     }
 }
