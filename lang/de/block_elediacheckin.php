@@ -36,7 +36,7 @@ $string['createactivitynow']      = 'Jetzt eine Check-in-Aktivität anlegen';
 $string['showpreview']         = 'Fragen-Vorschau anzeigen';
 $string['showpreview_help']    = 'Wenn aktiviert, zeigt der Block eine zufällige Frage aus der verknüpften Aktivität über den Start-Buttons an. Die Vorschau berücksichtigt die Fragetypen-, Kategorien- und Sprach-Einstellungen der Aktivität.';
 
-$string['openactivity']   = 'Check-in öffnen';
+$string['openactivity']   = 'Öffnen';
 $string['noquestions']    = 'Keine Fragen verfügbar.';
 $string['notconfigured']  = 'Dieser Block ist noch nicht mit einer Check-in-Aktivität verknüpft. Bearbeite den Block, um eine auszuwählen.';
 

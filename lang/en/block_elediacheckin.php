@@ -36,7 +36,7 @@ $string['createactivitynow']      = 'Create a Check-in activity now';
 $string['showpreview']         = 'Show question preview';
 $string['showpreview_help']    = 'If enabled, the block renders a random question from the linked activity above the launch buttons. The preview respects the activity\'s ziele, categories and content-language settings.';
 
-$string['openactivity']   = 'Open Check-in';
+$string['openactivity']   = 'Open';
 $string['noquestions']    = 'No questions available.';
 $string['notconfigured']  = 'This block is not yet linked to a Check-in activity. Edit the block to choose one.';
 

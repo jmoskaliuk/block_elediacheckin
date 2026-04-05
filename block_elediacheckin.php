@@ -40,6 +40,16 @@ use mod_elediacheckin\local\service\activity_pool;
 class block_elediacheckin extends block_base {
 
     /**
+     * Module context for the currently-rendered preview question. Stored
+     * so `resolve_preview_question()` can pass it into format_text() and
+     * thus keep the filter cache stable regardless of the page context
+     * the block is embedded in.
+     *
+     * @var \core\context\module|null
+     */
+    private $_preview_modcontext = null;
+
+    /**
      * Initialises the block metadata.
      */
     public function init(): void {
@@ -71,11 +81,16 @@ class block_elediacheckin extends block_base {
      * course-scoped Check-in activity). The frontpage is also allowed
      * because Moodle treats the frontpage as a regular course (SITEID)
      * — admins can therefore place a Check-in activity on the frontpage
-     * and add this block to launch it site-wide. The per-instance edit
-     * form uses `get_fast_modinfo($COURSE)`, which resolves to the
-     * frontpage course on site-index, so the dropdown correctly offers
-     * frontpage-scoped Check-in activities when configuring the block
-     * there. Dashboard/admin/other mod pages stay off to avoid noise.
+     * and add this block to launch it site-wide.
+     *
+     * `mod` is set to true so the block stays visible and addable when a
+     * teacher is sitting on a mod_elediacheckin (or any other mod)
+     * activity page — Johannes' testing feedback: dropping onto an
+     * activity shouldn't make the block disappear from the right column,
+     * because teachers frequently jump between the course page and the
+     * activity page and want the launcher to stay reachable.
+     *
+     * Dashboard (`my`) and admin layout stay off to avoid noise.
      *
      * Both `site` and `site-index` are set to true: Moodle core uses
      * `site-index` as the canonical page-type pattern for the frontpage,
@@ -89,8 +104,8 @@ class block_elediacheckin extends block_base {
             'course-view' => true,
             'site'        => true,
             'site-index'  => true,
+            'mod'         => true,
             'my'          => false,
-            'mod'         => false,
             'admin'       => false,
         ];
     }
@@ -141,6 +156,17 @@ class block_elediacheckin extends block_base {
         }
 
         $instance = $this->fetch_instance_row($cm->instance);
+
+        // Remember the module context for downstream format_text() calls —
+        // without a context argument, format_text() falls back to
+        // `$PAGE->context`, which on a block-rendering request is usually
+        // the *course* context (or the current mod's context when the
+        // user is sitting on a different activity page). The filter
+        // pipeline then sometimes silently drops cached strings because
+        // the cache key depends on the resolved context. Passing the
+        // activity's own module context keeps the preview text stable
+        // independent of where the block happens to be shown.
+        $this->_preview_modcontext = $modcontext;
 
         // Optional preview question — rendered above the launch buttons.
         // Resolved BEFORE the launch URLs so we can pin the currently-
@@ -238,9 +264,26 @@ class block_elediacheckin extends block_base {
 
         // Own questions: teacher-authored plain text, escape aggressively.
         // Bundle questions: trusted JSON content, allow simple HTML.
+        //
+        // Pass the activity's module context explicitly. format_text()
+        // without a context falls back to $PAGE->context, which in the
+        // block-render case is frequently a different context than the
+        // one we want and has caused at least one "preview text silently
+        // empty" regression in the past. `noclean => true` is safe here
+        // because the bundle content was already sanitised during
+        // import, and own-questions are rendered with FORMAT_PLAIN.
+        $rawfrage = (string) ($question->frage ?? '');
+        $ctx = $this->_preview_modcontext;
+        $options = ['context' => $ctx, 'para' => false, 'newlines' => false];
         $rendered = !empty($question->isown)
-            ? format_text($question->frage, FORMAT_PLAIN)
-            : format_text($question->frage, FORMAT_HTML);
+            ? format_text($rawfrage, FORMAT_PLAIN, $options)
+            : format_text($rawfrage, FORMAT_HTML, $options);
+        // Last-resort fallback: if the filter chain produced an empty
+        // string (happened in testing when a filter threw), fall back
+        // to the escaped raw text so teachers always see *something*.
+        if (trim((string) $rendered) === '' && $rawfrage !== '') {
+            $rendered = s($rawfrage);
+        }
 
         $zielforlabel = !empty($question->ziel) ? $question->ziel : $activeziel;
         $zielkey = 'ziel_' . $zielforlabel;
