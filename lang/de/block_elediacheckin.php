@@ -24,24 +24,18 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname']           = 'Check-in';
+$string['pluginname']                  = 'Check-in';
 $string['elediacheckin:addinstance']   = 'Neuen Check-in-Block hinzufügen';
 $string['elediacheckin:myaddinstance'] = 'Check-in-Block zum Dashboard hinzufügen';
 
-$string['blocktitle']           = 'Blocktitel';
-$string['displaymode']          = 'Anzeigemodus';
-$string['displaymode_link']     = 'Verlinkung auf Aktivität';
-$string['displaymode_mini']     = 'Mini-Fragengenerator';
-$string['linkedactivitycmid']   = 'Verknüpfte Aktivität (Kursmodul-ID)';
-$string['linkedactivitycmid_help'] = 'Kursmodul-ID der mod_elediacheckin-Aktivität, auf die dieser Block verweisen soll. Leer lassen, um globale Standards zu verwenden.';
+$string['blocktitle']          = 'Blocktitel';
+$string['linkedactivity']      = 'Verknüpfte Check-in-Aktivität';
+$string['linkedactivity_help'] = 'Wähle die Check-in-Aktivität in diesem Kurs aus, die der Block starten soll. Es werden nur Aktivitäten angezeigt, die für den aktuellen Nutzer sichtbar sind. Lege zuerst eine Aktivität im Kurs an, wenn die Liste leer ist.';
+$string['showpreview']         = 'Fragen-Vorschau anzeigen';
+$string['showpreview_help']    = 'Wenn aktiviert, zeigt der Block eine zufällige Frage aus der verknüpften Aktivität über den Start-Buttons an. Die Vorschau berücksichtigt die Fragetypen-, Kategorien- und Sprach-Einstellungen der Aktivität.';
 
-$string['questionmode']         = 'Fragemodus';
-$string['showfullviewlink']     = 'Link "Vollansicht öffnen" anzeigen';
+$string['openactivity']   = 'Check-in öffnen';
+$string['noquestions']    = 'Keine Fragen verfügbar.';
+$string['notconfigured']  = 'Dieser Block ist noch nicht mit einer Check-in-Aktivität verknüpft. Bearbeite den Block, um eine auszuwählen.';
 
-$string['newquestion']          = 'Andere Frage';
-$string['noquestions']          = 'Keine Fragen verfügbar.';
-$string['openactivity']         = 'Check-in öffnen';
-$string['fullview']             = 'Vollansicht öffnen';
-$string['notconfigured']        = 'Dieser Block ist noch nicht mit einer Check-in-Aktivität verknüpft.';
-
-$string['privacy:metadata']     = 'Der Check-in-Block speichert keine personenbezogenen Daten. Er zeigt ausschließlich Fragen aus einem externen Inhalts-Repository an.';
+$string['privacy:metadata'] = 'Der Check-in-Block speichert keine personenbezogenen Daten. Er zeigt ausschließlich Fragen aus dem mod_elediacheckin-Inhalts-Repository an.';

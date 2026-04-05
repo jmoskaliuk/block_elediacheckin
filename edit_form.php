@@ -26,6 +26,10 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Per-instance settings form.
+ *
+ * The block is scoped to one mod_elediacheckin activity in the current
+ * course — we list the available instances as a drop-down rather than
+ * asking the user to paste a course-module id.
  */
 class block_elediacheckin_edit_form extends block_edit_form {
 
@@ -35,47 +39,31 @@ class block_elediacheckin_edit_form extends block_edit_form {
      * @param MoodleQuickForm $mform
      */
     protected function specific_definition($mform): void {
+        global $COURSE;
+
         $mform->addElement('header', 'configheader', get_string('blocksettings', 'block'));
 
         $mform->addElement('text', 'config_title', get_string('blocktitle', 'block_elediacheckin'));
         $mform->setType('config_title', PARAM_TEXT);
 
-        $displaymodes = [
-            'link' => get_string('displaymode_link', 'block_elediacheckin'),
-            'mini' => get_string('displaymode_mini', 'block_elediacheckin'),
-        ];
-        $mform->addElement('select', 'config_displaymode',
-            get_string('displaymode', 'block_elediacheckin'), $displaymodes);
-        $mform->setDefault('config_displaymode', 'link');
+        // Build "pick a Check-in activity in this course" drop-down.
+        $options = [0 => get_string('choosedots')];
+        $modinfo = get_fast_modinfo($COURSE);
+        foreach ($modinfo->get_instances_of('elediacheckin') as $cm) {
+            if (!$cm->uservisible) {
+                continue;
+            }
+            $options[$cm->id] = format_string($cm->name);
+        }
 
-        $mform->addElement('text', 'config_cmid',
-            get_string('linkedactivitycmid', 'block_elediacheckin'), ['size' => '8']);
+        $mform->addElement('select', 'config_cmid',
+            get_string('linkedactivity', 'block_elediacheckin'), $options);
         $mform->setType('config_cmid', PARAM_INT);
-        $mform->addHelpButton('config_cmid', 'linkedactivitycmid', 'block_elediacheckin');
+        $mform->addHelpButton('config_cmid', 'linkedactivity', 'block_elediacheckin');
 
-        $questionmodes = [
-            'both'     => get_string('mode_both', 'elediacheckin'),
-            'checkin'  => get_string('mode_checkin', 'elediacheckin'),
-            'checkout' => get_string('mode_checkout', 'elediacheckin'),
-        ];
-        $mform->addElement('select', 'config_questionmode',
-            get_string('questionmode', 'block_elediacheckin'), $questionmodes);
-        $mform->setDefault('config_questionmode', 'both');
-        $mform->hideIf('config_questionmode', 'config_displaymode', 'eq', 'link');
-
-        $mform->addElement('text', 'config_categories',
-            get_string('categories', 'elediacheckin'), ['size' => '48']);
-        $mform->setType('config_categories', PARAM_TEXT);
-        $mform->hideIf('config_categories', 'config_displaymode', 'eq', 'link');
-
-        $mform->addElement('text', 'config_contentlang',
-            get_string('contentlang', 'elediacheckin'), ['size' => '8']);
-        $mform->setType('config_contentlang', PARAM_LANG);
-        $mform->hideIf('config_contentlang', 'config_displaymode', 'eq', 'link');
-
-        $mform->addElement('selectyesno', 'config_showfullviewlink',
-            get_string('showfullviewlink', 'block_elediacheckin'));
-        $mform->setDefault('config_showfullviewlink', 1);
-        $mform->hideIf('config_showfullviewlink', 'config_displaymode', 'eq', 'link');
+        $mform->addElement('selectyesno', 'config_showpreview',
+            get_string('showpreview', 'block_elediacheckin'));
+        $mform->setDefault('config_showpreview', 0);
+        $mform->addHelpButton('config_showpreview', 'showpreview', 'block_elediacheckin');
     }
 }

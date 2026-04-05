@@ -17,6 +17,13 @@
 /**
  * Main block class for block_elediacheckin.
  *
+ * The block is a thin launcher for an existing mod_elediacheckin activity
+ * in the same course. It does not own any questions or configuration of
+ * its own beyond "which activity should I launch and should I render a
+ * preview card on top of the launch buttons?". All content resolution
+ * (ziele / categories / contentlang) is delegated to the activity's own
+ * view.php and present.php.
+ *
  * @package    block_elediacheckin
  * @copyright  2026 eLeDia GmbH <info@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,7 +34,8 @@ defined('MOODLE_INTERNAL') || die();
 use mod_elediacheckin\local\service\question_provider;
 
 /**
- * Compact check-in block - displays a single question or a launcher link.
+ * Compact check-in block - launches a mod_elediacheckin activity in the
+ * same course and optionally renders a preview question card.
  */
 class block_elediacheckin extends block_base {
 
@@ -57,17 +65,18 @@ class block_elediacheckin extends block_base {
     }
 
     /**
-     * Declares on which pages this block can appear.
+     * Declares on which pages this block can appear. Only course pages
+     * make sense for a launcher that targets a course-scoped activity.
      *
      * @return array
      */
     public function applicable_formats(): array {
         return [
-            'course-view'    => true,
-            'site'           => true,
-            'my'             => true,
-            'mod'            => false,
-            'admin'          => false,
+            'course-view' => true,
+            'site'        => false,
+            'my'          => false,
+            'mod'         => false,
+            'admin'       => false,
         ];
     }
 
@@ -77,7 +86,7 @@ class block_elediacheckin extends block_base {
      * @return stdClass
      */
     public function get_content(): stdClass {
-        global $OUTPUT;
+        global $OUTPUT, $COURSE;
 
         if ($this->content !== null) {
             return $this->content;
@@ -88,30 +97,58 @@ class block_elediacheckin extends block_base {
         $this->content->footer = '';
 
         $config = $this->config ?? new stdClass();
-        $mode   = $config->displaymode ?? 'link';
+        $cmid   = (int) ($config->cmid ?? 0);
 
-        if ($mode === 'link') {
-            $this->content->text = $this->render_link_mode($config);
+        // No activity chosen yet: show the hint + edit pencil prompt.
+        if ($cmid <= 0) {
+            $this->content->text = html_writer::tag('p',
+                get_string('notconfigured', 'block_elediacheckin'),
+                ['class' => 'text-muted mb-0']);
             return $this->content;
         }
 
-        // mini generator mode.
-        $provider = new question_provider();
-        $question = $provider->get_random_question([
-            'mode'       => $config->questionmode ?? 'both',
-            'categories' => $config->categories ?? '',
-            'lang'       => $config->contentlang ?? current_language(),
-        ]);
+        // Resolve the linked course module. Catch any lookup failure so the
+        // block degrades gracefully if the activity was deleted.
+        try {
+            $cm = get_coursemodule_from_id('elediacheckin', $cmid, 0, false, MUST_EXIST);
+        } catch (\Throwable $e) {
+            $this->content->text = html_writer::tag('p',
+                get_string('notconfigured', 'block_elediacheckin'),
+                ['class' => 'text-muted mb-0']);
+            return $this->content;
+        }
+
+        // Capability check: do not render launchers to users who cannot see
+        // the activity.
+        $modcontext = \core\context\module::instance($cm->id);
+        if (!has_capability('mod/elediacheckin:view', $modcontext)) {
+            return $this->content;
+        }
+
+        $instance = $this->fetch_instance_row($cm->instance);
+
+        $viewurl = new moodle_url('/mod/elediacheckin/view.php', ['id' => $cm->id]);
+        $popupurl = new moodle_url('/mod/elediacheckin/present.php',
+            ['id' => $cm->id, 'layout' => 'popup']);
+
+        // Optional preview question — rendered above the launch buttons.
+        $preview = null;
+        if (!empty($config->showpreview) && $instance !== null) {
+            $preview = $this->resolve_preview_question($instance, $COURSE);
+        }
 
         $templatecontext = [
-            'instanceid'  => $this->instance->id,
-            'hasquestion' => !empty($question),
-            'question'    => $question,
-            'strnew'      => get_string('newquestion', 'block_elediacheckin'),
-            'strnone'     => get_string('noquestions', 'block_elediacheckin'),
-            'fullviewurl' => $this->get_full_view_url($config),
-            'strfullview' => get_string('fullview', 'block_elediacheckin'),
-            'showfullviewlink' => !empty($config->showfullviewlink),
+            'instanceid'     => $this->instance->id,
+            'activityname'   => $instance ? format_string($instance->name) : format_string($cm->name),
+            'viewurl'        => $viewurl->out(false),
+            'popupurl'       => $popupurl->out(false),
+            'hasquestion'    => !empty($preview),
+            'question'       => $preview,
+            'showpreview'    => !empty($config->showpreview),
+            'stropen'        => get_string('openactivity', 'block_elediacheckin'),
+            'strpopup'       => get_string('openpopup', 'elediacheckin'),
+            'strfullscreen'  => get_string('openfullscreen', 'elediacheckin'),
+            'strnone'        => get_string('noquestions', 'block_elediacheckin'),
         ];
 
         $this->content->text = $OUTPUT->render_from_template(
@@ -123,31 +160,70 @@ class block_elediacheckin extends block_base {
     }
 
     /**
-     * Renders the link-only mode body.
+     * Fetch the activity instance row, tolerating missing records.
      *
-     * @param stdClass $config
-     * @return string
+     * @param int $instanceid
+     * @return \stdClass|null
      */
-    private function render_link_mode(stdClass $config): string {
-        $url = $this->get_full_view_url($config);
-        if (!$url) {
-            return html_writer::tag('p', get_string('notconfigured', 'block_elediacheckin'),
-                ['class' => 'text-muted mb-0']);
-        }
-        return html_writer::link($url, get_string('openactivity', 'block_elediacheckin'),
-            ['class' => 'btn btn-primary']);
+    private function fetch_instance_row(int $instanceid): ?\stdClass {
+        global $DB;
+        $row = $DB->get_record('elediacheckin', ['id' => $instanceid]);
+        return $row ?: null;
     }
 
     /**
-     * Resolves the URL of the referenced mod_elediacheckin activity, if any.
+     * Resolve a random preview question honouring the activity's ziele,
+     * categories, and content-language settings. Mirrors the sentinel
+     * handling used by mod_elediacheckin/view.php so the block preview
+     * stays consistent with the activity page.
      *
-     * @param stdClass $config
-     * @return moodle_url|null
+     * @param \stdClass $instance The elediacheckin DB row.
+     * @param \stdClass $course   The current course record.
+     * @return array|null         Template context for the preview card, or null.
      */
-    private function get_full_view_url(stdClass $config): ?moodle_url {
-        if (empty($config->cmid)) {
+    private function resolve_preview_question(\stdClass $instance, \stdClass $course): ?array {
+        $ziele = array_values(array_filter(array_map('trim',
+            explode(',', (string) ($instance->ziele ?? '')))));
+        if (empty($ziele)) {
+            $ziele = ['checkin'];
+        }
+
+        $langcandidates = [];
+        $configured = (string) ($instance->contentlang ?? '');
+        if ($configured === '_auto_') {
+            $langcandidates[] = current_language();
+        } else if ($configured === '_course_') {
+            $langcandidates[] = !empty($course->lang) ? $course->lang : current_language();
+        } else if ($configured !== '') {
+            $langcandidates[] = $configured;
+        }
+        $langcandidates[] = current_language();
+        $langcandidates[] = null;
+
+        $provider = new question_provider();
+        $question = null;
+        foreach (array_unique(array_filter($langcandidates, static fn($v) => $v !== ''), SORT_REGULAR) as $lang) {
+            $question = $provider->get_random_question([
+                'ziele'      => $ziele,
+                'categories' => $instance->categories ?? '',
+                'lang'       => $lang,
+            ]);
+            if ($question) {
+                break;
+            }
+        }
+
+        if (!$question) {
             return null;
         }
-        return new moodle_url('/mod/elediacheckin/view.php', ['id' => (int) $config->cmid]);
+
+        $zielkey = 'ziel_' . $question->ziel;
+        return [
+            'frage'     => format_text($question->frage, FORMAT_HTML),
+            'ziel'      => $question->ziel,
+            'ziellabel' => get_string_manager()->string_exists($zielkey, 'elediacheckin')
+                ? get_string($zielkey, 'elediacheckin')
+                : ucfirst($question->ziel),
+        ];
     }
 }

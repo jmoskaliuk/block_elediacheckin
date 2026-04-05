@@ -25,13 +25,13 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_elediacheckin';
-$plugin->version   = 2026040500;
+$plugin->version   = 2026040501;
 $plugin->requires  = 2024100700; // Moodle 4.5.
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.1.0';
+$plugin->release   = '0.2.0';
 
 // This block is a lightweight wrapper around mod_elediacheckin's service layer -
 // the activity module must be present for the block to work.
 $plugin->dependencies = [
-    'mod_elediacheckin' => 2026040500,
+    'mod_elediacheckin' => 2026040503,
 ];

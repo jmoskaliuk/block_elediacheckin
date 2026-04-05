@@ -1,36 +1,45 @@
 {{!
     @template block_elediacheckin/content
 
-    Mini question-generator body for block_elediacheckin.
+    Launcher body for block_elediacheckin. Renders an optional preview
+    question card followed by launch buttons that target the activity
+    view / presentation layouts.
 
     Example context (json):
     {
         "instanceid": 7,
+        "activityname": "Morning Check-in",
+        "viewurl": "/mod/elediacheckin/view.php?id=42",
+        "popupurl": "/mod/elediacheckin/present.php?id=42&layout=popup",
         "hasquestion": true,
-        "question": { "text": "Was nimmst du aus dieser Sitzung mit?", "type": "checkout" },
-        "strnew": "Andere Frage",
-        "strnone": "Keine Fragen",
-        "fullviewurl": "/mod/elediacheckin/view.php?id=42",
-        "strfullview": "Vollansicht öffnen",
-        "showfullviewlink": true
+        "showpreview": true,
+        "question": { "frage": "Was nimmst du mit?", "ziel": "checkout", "ziellabel": "Check-out" },
+        "stropen": "Open Check-in",
+        "strpopup": "Open as popup",
+        "strfullscreen": "Fullscreen",
+        "strnone": "No questions available."
     }
 }}
 <div class="block-elediacheckin" data-instance="{{instanceid}}">
-    {{#hasquestion}}
-        <p class="small text-muted text-uppercase mb-1">{{question.type}}</p>
-        <p class="mb-3" style="font-weight:600; line-height:1.4;">{{question.text}}</p>
-    {{/hasquestion}}
-    {{^hasquestion}}
-        <div class="alert alert-info py-2 mb-2" role="status">{{strnone}}</div>
-    {{/hasquestion}}
+    {{#showpreview}}
+        {{#hasquestion}}
+            <div class="block-elediacheckin-preview mb-3 p-2 border rounded bg-light">
+                <div class="small text-muted text-uppercase mb-1">{{question.ziellabel}}</div>
+                <div style="font-weight:600; line-height:1.4;">{{{question.frage}}}</div>
+            </div>
+        {{/hasquestion}}
+        {{^hasquestion}}
+            <div class="alert alert-info py-2 mb-3" role="status">{{strnone}}</div>
+        {{/hasquestion}}
+    {{/showpreview}}
     <div class="d-flex gap-2 flex-wrap">
-        <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.location.reload();">
-            {{strnew}}
-        </button>
-        {{#showfullviewlink}}
-            {{#fullviewurl}}
-                <a href="{{.}}" class="btn btn-sm btn-link">{{strfullview}}</a>
-            {{/fullviewurl}}
-        {{/showfullviewlink}}
+        <a href="{{viewurl}}" class="btn btn-sm btn-primary">{{stropen}}</a>
+        <a href="{{popupurl}}"
+           class="btn btn-sm btn-outline-secondary"
+           target="_blank"
+           rel="noopener"
+           onclick="window.open(this.href,'elediacheckin_present','width=1000,height=720,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes');return false;">
+            {{strpopup}}
+        </a>
     </div>
 </div>

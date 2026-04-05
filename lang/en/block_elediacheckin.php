@@ -24,24 +24,18 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname']           = 'Check-in';
+$string['pluginname']                  = 'Check-in';
 $string['elediacheckin:addinstance']   = 'Add a new Check-in block';
 $string['elediacheckin:myaddinstance'] = 'Add a Check-in block to the Dashboard';
 
-$string['blocktitle']           = 'Block title';
-$string['displaymode']          = 'Display mode';
-$string['displaymode_link']     = 'Link to activity';
-$string['displaymode_mini']     = 'Mini question generator';
-$string['linkedactivitycmid']   = 'Linked activity (course module id)';
-$string['linkedactivitycmid_help'] = 'Enter the course module id of the mod_elediacheckin activity this block should link to. Leave empty to use global defaults.';
+$string['blocktitle']          = 'Block title';
+$string['linkedactivity']      = 'Linked Check-in activity';
+$string['linkedactivity_help'] = 'Pick the Check-in activity in this course that the block should launch. Only activities the current user can see are listed. Add the activity to the course first if the list is empty.';
+$string['showpreview']         = 'Show question preview';
+$string['showpreview_help']    = 'If enabled, the block renders a random question from the linked activity above the launch buttons. The preview respects the activity\'s ziele, categories and content-language settings.';
 
-$string['questionmode']         = 'Question mode';
-$string['showfullviewlink']     = 'Show "Open full view" link';
+$string['openactivity']   = 'Open Check-in';
+$string['noquestions']    = 'No questions available.';
+$string['notconfigured']  = 'This block is not yet linked to a Check-in activity. Edit the block to choose one.';
 
-$string['newquestion']          = 'Another question';
-$string['noquestions']          = 'No questions available.';
-$string['openactivity']         = 'Open Check-in';
-$string['fullview']             = 'Open full view';
-$string['notconfigured']        = 'This block is not yet linked to a Check-in activity.';
-
-$string['privacy:metadata']     = 'The Check-in block does not store any personal data. It displays questions that originate from an external content repository.';
+$string['privacy:metadata'] = 'The Check-in block does not store any personal data. It only displays questions that originate from the mod_elediacheckin content repository.';
