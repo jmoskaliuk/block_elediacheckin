@@ -57,6 +57,27 @@ class block_elediacheckin extends block_base {
     }
 
     /**
+     * Apply per-instance configuration after init().
+     *
+     * If the admin set a custom title, use it. If it is explicitly empty,
+     * `hide_header()` will suppress the block header entirely.
+     */
+    public function specialization(): void {
+        if (isset($this->config->title)) {
+            $this->title = $this->config->title;
+        }
+    }
+
+    /**
+     * Hide the block header when the instance title is explicitly empty.
+     *
+     * @return bool
+     */
+    public function hide_header(): bool {
+        return isset($this->config->title) && $this->config->title === '';
+    }
+
+    /**
      * Allows per-instance configuration.
      *
      * @return bool

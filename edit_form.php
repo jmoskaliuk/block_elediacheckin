@@ -93,7 +93,7 @@ class block_elediacheckin_edit_form extends block_edit_form {
 
         $mform->addElement('selectyesno', 'config_showpreview',
             get_string('showpreview', 'block_elediacheckin'));
-        $mform->setDefault('config_showpreview', 0);
+        $mform->setDefault('config_showpreview', 1);
         $mform->addHelpButton('config_showpreview', 'showpreview', 'block_elediacheckin');
     }
 }
