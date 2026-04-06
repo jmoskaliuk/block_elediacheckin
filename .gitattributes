@@ -1,0 +1,8 @@
+# Files excluded from `git archive` (i.e., from release ZIPs).
+# Non-English language packs must not ship in the release — community
+# translations go through AMOS (lang.moodle.org) after approval.
+
+lang/de/ export-ignore
+
+# Development/CI files.
+.gitattributes export-ignore
