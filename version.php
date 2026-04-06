@@ -25,10 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_elediacheckin';
-$plugin->version   = 2026040505;
+$plugin->version   = 2026040601;
 $plugin->requires  = 2024100700; // Moodle 4.5.
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.3.0';
+$plugin->maturity  = MATURITY_BETA;
+$plugin->release   = '0.9.0';
 
 // This block is a lightweight wrapper around mod_elediacheckin's service layer -
 // the activity module must be present for the block to work. Bumped to
