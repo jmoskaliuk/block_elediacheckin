@@ -19,7 +19,7 @@ navigating into the activity itself.
 
 ## Requirements
 
-- Moodle 4.5 or later (tested up to 5.0)
+- Moodle 4.5 or later (tested up to 5.1)
 - PHP 8.1+
 - `mod_elediacheckin` must be installed (hard dependency)
 
