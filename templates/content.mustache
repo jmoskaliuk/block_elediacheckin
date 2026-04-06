@@ -26,6 +26,9 @@
             <div class="block-elediacheckin-preview mb-3 p-2 border rounded bg-light">
                 <div class="small text-muted text-uppercase mb-1">{{question.ziellabel}}</div>
                 <div style="font-weight:600; line-height:1.4;">{{{question.frage}}}</div>
+                {{#question.hasauthor}}
+                    <div class="small text-muted mt-1" style="font-style:italic;">&mdash; {{question.author}}</div>
+                {{/question.hasauthor}}
             </div>
         {{/hasquestion}}
         {{^hasquestion}}

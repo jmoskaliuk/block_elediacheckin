@@ -309,6 +309,10 @@ class block_elediacheckin extends block_base {
         $zielforlabel = !empty($question->ziel) ? $question->ziel : $activeziel;
         $zielkey = 'ziel_' . $zielforlabel;
 
+        // Author attribution only for quotes (ziel === 'zitat').
+        $isquote = !empty($question->ziel) && $question->ziel === 'zitat';
+        $hasauthor = $isquote && !empty($question->author);
+
         return [
             'frage'      => $rendered,
             'ziel'       => $activeziel,
@@ -316,6 +320,9 @@ class block_elediacheckin extends block_base {
             'ziellabel'  => get_string_manager()->string_exists($zielkey, 'elediacheckin')
                 ? get_string($zielkey, 'elediacheckin')
                 : ucfirst($zielforlabel),
+            'isquote'    => $isquote,
+            'hasauthor'  => $hasauthor,
+            'author'     => $hasauthor ? s($question->author) : '',
         ];
     }
 }
